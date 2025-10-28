@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nivaran - Prevent Food Waste, Feed the Hungry</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="landing-page">
+    <header class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="light_mode.png" alt="Nivaran Logo">
+            </div>
+            <nav class="nav-menu">
+                <a href="#features">Features</a>
+                <a href="#how-it-works">How It Works</a>
+                <a href="#about">About</a>
+                <a href="login.html" class="btn btn-secondary" id="nav-login" style="visibility: hidden;">Login</a>
+                <a href="signup.html" class="btn btn-primary" id="nav-signup" style="visibility: hidden;">Get Started</a>
+                <a href="dashboard.html" class="btn btn-secondary" id="nav-dashboard" style="display: none;">Dashboard</a>
+                <button class="btn btn-primary" id="nav-logout" onclick="handleLogout()" style="display: none;">Logout</button>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Prevent Food Waste,<br>Feed the Hungry</h1>
+                <p class="hero-subtitle">
+                    Connect food donors with NGOs to ensure surplus food reaches those who need it most.
+                    Join our community and make a difference today.
+                </p>
+                <div class="hero-actions">
+                    <a href="signup.html" class="btn btn-primary btn-lg">Join as Donor</a>
+                    <a href="signup.html?role=ngo" class="btn btn-secondary btn-lg">Register as NGO</a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <h3>10K+</h3>
+                        <p>Meals Donated</p>
+                    </div>
+                    <div class="stat">
+                        <h3>500+</h3>
+                        <p>NGOs</p>
+                    </div>
+                    <div class="stat">
+                        <h3>1000+</h3>
+                        <p>Donors</p>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-image">
+                <img src="dark_mode.png" alt="Food donation illustration">
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="container">
+            <h2>Why Choose Nivaran?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🗺️</div>
+                    <h3>Find NGOs Nearby</h3>
+                    <p>Discover verified NGOs in your area using our interactive map and location-based search.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Real-time Chat</h3>
+                    <p>Connect instantly with NGOs through our built-in messaging system for quick coordination.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Easy to Use</h3>
+                    <p>Post your surplus food in seconds and manage donations from your personalized dashboard.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🔒</div>
+                    <h3>Secure & Private</h3>
+                    <p>Your data is protected. Share contact details only when you're ready to donate.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Track Impact</h3>
+                    <p>View your donation history and see the real impact you're making in your community.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">✅</div>
+                    <h3>Verified NGOs</h3>
+                    <p>Connect with authenticated NGOs that are committed to serving the community.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <h2>How It Works</h2>
+            
+            <div class="process">
+                <h3>For Donors</h3>
+                <div class="process-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h4>Sign Up</h4>
+                        <p>Create your free account and set your location</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h4>Post Food</h4>
+                        <p>Share details about your surplus food with photos</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h4>Connect</h4>
+                        <p>NGOs in your area will reach out to arrange pickup</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h4>Make Impact</h4>
+                        <p>Your food helps feed those in need!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="process">
+                <h3>For NGOs</h3>
+                <div class="process-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <h4>Register</h4>
+                        <p>Sign up with your organization details</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <h4>Browse Posts</h4>
+                        <p>Find available food donations in your area</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <h4>Connect</h4>
+                        <p>Chat with donors to coordinate pickup</p>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <h4>Serve Community</h4>
+                        <p>Distribute food to those who need it most</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about">
+        <div class="container">
+            <h2>About Nivaran</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p>
+                        Nivaran is a platform dedicated to reducing food waste and fighting hunger by connecting 
+                        food donors with NGOs. Every day, tons of surplus food goes to waste while millions go 
+                        hungry. We bridge this gap by making it easy for individuals, restaurants, and 
+                        organizations to donate their excess food to verified NGOs that serve communities in need.
+                    </p>
+                    <p>
+                        Our mission is to create a world where no food goes to waste and no one goes hungry. 
+                        Join us in making a difference, one meal at a time.
+                    </p>
+                </div>
+                <div class="about-stats">
+                    <div class="impact-stat">
+                        <h3>🌍 Environmental Impact</h3>
+                        <p>Reducing food waste helps lower greenhouse gas emissions</p>
+                    </div>
+                    <div class="impact-stat">
+                        <h3>❤️ Social Impact</h3>
+                        <p>Every donation helps feed families in need</p>
+                    </div>
+                    <div class="impact-stat">
+                        <h3>🤝 Community Building</h3>
+                        <p>Connecting donors and NGOs strengthens communities</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta">
+        <div class="container">
+            <h2>Ready to Make a Difference?</h2>
+            <p>Join thousands of donors and NGOs working together to fight hunger</p>
+            <div class="cta-actions">
+                <a href="signup.html" class="btn btn-primary btn-lg">Get Started Today</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <img src="light_mode.png" alt="Nivaran Logo" style="height: 30px; margin-bottom: 0.5rem;">
+                    <p>Preventing food waste, feeding the hungry</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Quick Links</h4>
+                    <a href="#features">Features</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#about">About</a>
+                    <a href="login.html">Login</a>
+                </div>
+                <div class="footer-section">
+                    <h4>For Users</h4>
+                    <a href="signup.html">Sign Up</a>
+                    <a href="feed.html">Browse Donations</a>
+                    <a href="find.html">Find NGOs</a>
+                </div>
+                <div class="footer-section">
+                    <h4>Support</h4>
+                    <a href="#">Help Center</a>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Contact Us</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Nivaran. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        // Initialize Supabase client
+        const supabase = window.supabase.createClient(
+            SUPABASE_CONFIG.url,
+            SUPABASE_CONFIG.anonKey
+        );
+        window.supabase = supabase;
+    </script>
+    <script src="auth.js"></script>
+    <script>
+        // Handle logout
+        async function handleLogout() {
+            try {
+                await auth.signOut();
+            } catch (error) {
+                console.error('Logout error:', error);
+                alert('Failed to logout. Please try again.');
+            }
+        }
+
+        // Check if user is already logged in
+        async function checkAuthStatus() {
+            try {
+                const session = await auth.getSession();
+                console.log('Session check:', session);
+                
+                const navLogin = document.getElementById('nav-login');
+                const navSignup = document.getElementById('nav-signup');
+                const navDashboard = document.getElementById('nav-dashboard');
+                const navLogout = document.getElementById('nav-logout');
+                
+                if (session && session.user) {
+                    console.log('User is logged in, updating UI');
+                    // User is logged in, show dashboard and logout buttons
+                    if (navLogin) {
+                        navLogin.style.display = 'none';
+                        navLogin.style.visibility = 'visible';
+                    }
+                    if (navSignup) {
+                        navSignup.style.display = 'none';
+                        navSignup.style.visibility = 'visible';
+                    }
+                    if (navDashboard) navDashboard.style.display = 'inline-block';
+                    if (navLogout) navLogout.style.display = 'inline-block';
+                    
+                    // Update hero action buttons
+                    const heroActions = document.querySelector('.hero-actions');
+                    if (heroActions) {
+                        heroActions.innerHTML = `
+                            <a href="dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                        `;
+                    }
+                } else {
+                    console.log('User is not logged in');
+                    // User is not logged in, show login and signup buttons
+                    if (navLogin) {
+                        navLogin.style.display = 'inline-block';
+                        navLogin.style.visibility = 'visible';
+                    }
+                    if (navSignup) {
+                        navSignup.style.display = 'inline-block';
+                        navSignup.style.visibility = 'visible';
+                    }
+                    if (navDashboard) navDashboard.style.display = 'none';
+                    if (navLogout) navLogout.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking auth status:', error);
+                // On error, show login buttons
+                const navLogin = document.getElementById('nav-login');
+                const navSignup = document.getElementById('nav-signup');
+                if (navLogin) {
+                    navLogin.style.display = 'inline-block';
+                    navLogin.style.visibility = 'visible';
+                }
+                if (navSignup) {
+                    navSignup.style.display = 'inline-block';
+                    navSignup.style.visibility = 'visible';
+                }
+            }
+        }
+
+        // Run auth check immediately
+        checkAuthStatus();
+    </script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find NGOs - Nivaran</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" style="display: inline-block;">
+                    <img src="light_mode.png" alt="Nivaran Logo" style="cursor: pointer;">
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-link"><span>📊</span> Dashboard</a>
+                <a href="feed.html" class="nav-link"><span>📰</span> Feed</a>
+                <a href="find.html" class="nav-link active"><span>🗺️</span> Find NGOs</a>
+                <a href="chat-list.html" class="nav-link"><span>💬</span> Messages</a>
+                <a href="create-post.html" class="nav-link"><span>➕</span> Create Post</a>
+                <a href="profile.html" class="nav-link"><span>👤</span> Profile</a>
+                <a href="#" class="nav-link" onclick="logout()"><span>🚪</span> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content find-page">
+            <header class="page-header">
+                <h1>Find NGOs Near You</h1>
+                <div class="view-toggle">
+                    <button class="btn btn-sm" id="list-view-btn" onclick="switchView('list')">📋 List</button>
+                    <button class="btn btn-sm active" id="map-view-btn" onclick="switchView('map')">🗺️ Map</button>
+                </div>
+            </header>
+
+            <div class="filters-bar">
+                <div class="filter-group">
+                    <label>📍 Distance</label>
+                    <input type="range" id="radius-slider" min="1" max="50" value="10" step="1">
+                    <span id="radius-value">10 km</span>
+                </div>
+                <div class="filter-group">
+                    <label>🔍 Search</label>
+                    <input type="text" id="search-input" placeholder="Search by name..." >
+                </div>
+                <div class="filter-group">
+                    <label>✅ Verified Only</label>
+                    <input type="checkbox" id="verified-only">
+                </div>
+                <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+            </div>
+
+            <div class="find-content">
+                <div id="map-view" class="map-container">
+                    <div id="map" style="height: 600px;"></div>
+                </div>
+
+                <div id="list-view" class="ngos-list" style="display: none;">
+                    <div id="ngos-container"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="config.js"></script>
+    <script>
+        const supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        window.supabase = supabase;
+    </script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="map.js"></script>
+    <script src="chat.js"></script>
+    <script>
+        let mapManager = null;
+        let ngos = [];
+        let currentView = 'map';
+
+        async function initFindPage() {
+            await auth.requireAuth();
+
+            try {
+                // Get user location
+                const location = await getUserLocationWithFallback();
+                
+                // Initialize map
+                mapManager = new MapManager('map');
+                mapManager.initMap({ lat: location.lat, lng: location.lng });
+                mapManager.userLocation = location;
+                mapManager.addUserMarker();
+
+                // Load nearby NGOs
+                await loadNearbyNGOs(location.lat, location.lng, 10);
+
+                // Setup filters
+                document.getElementById('radius-slider').addEventListener('input', (e) => {
+                    document.getElementById('radius-value').textContent = e.target.value + ' km';
+                });
+            } catch (error) {
+                console.error('Init error:', error);
+                alert('Failed to initialize. Please check your location permissions.');
+            }
+        }
+
+        async function getUserLocationWithFallback() {
+            try {
+                return await mapManager.getUserLocation();
+            } catch (error) {
+                // Fallback to user's profile location
+                const profile = auth.getCurrentProfile();
+                if (profile.lat && profile.lng) {
+                    return { lat: profile.lat, lng: profile.lng };
+                }
+                // Default to India center
+                return APP_CONFIG.mapDefaultCenter;
+            }
+        }
+
+        async function loadNearbyNGOs(lat, lng, radius) {
+            try {
+                ngos = await api.findNearbyNGOs(lat, lng, radius);
+                
+                if (currentView === 'map') {
+                    mapManager.addNGOMarkers(ngos);
+                    mapManager.drawRadiusCircle(radius);
+                } else {
+                    renderNGOsList();
+                }
+            } catch (error) {
+                console.error('Error loading NGOs:', error);
+                alert('Failed to load NGOs');
+            }
+        }
+
+        function renderNGOsList() {
+            const container = document.getElementById('ngos-container');
+            
+            if (ngos.length === 0) {
+                container.innerHTML = '<div class="empty-state">No NGOs found in this area</div>';
+                return;
+            }
+
+            container.innerHTML = ngos.map(ngo => {
+                const verified = ngo.verified ? '<span class="verified-badge">✓ Verified</span>' : '';
+                const rating = ngo.rating ? `⭐ ${ngo.rating.toFixed(1)}` : '';
+                
+                return `
+                    <div class="ngo-list-card">
+                        <img src="${ngo.profile_image_url || 'default-avatar.png'}" alt="${ngo.name}" class="ngo-avatar">
+                        <div class="ngo-details">
+                            <div class="ngo-header">
+                                <h3>${ngo.name}</h3>
+                                ${verified}
+                            </div>
+                            <p class="ngo-distance">📍 ${ngo.distance_km.toFixed(2)} km away</p>
+                            ${rating ? `<p class="ngo-rating">${rating}</p>` : ''}
+                            <p class="ngo-bio">${ngo.bio ? ngo.bio.substring(0, 150) + '...' : ''}</p>
+                            <div class="ngo-contact">
+                                ${ngo.phone ? `<span>📞 ${ngo.phone}</span>` : ''}
+                                ${ngo.email ? `<span>✉️ ${ngo.email}</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="ngo-actions">
+                            <a href="ngo_profile.html?id=${ngo.id}" class="btn btn-primary btn-sm">View Profile</a>
+                            <button onclick="startChat('${ngo.id}')" class="btn btn-secondary btn-sm">💬 Chat</button>
+                            ${ngo.lat && ngo.lng ? `<button onclick="showOnMap(${ngo.lat}, ${ngo.lng})" class="btn btn-secondary btn-sm">📍 Show on Map</button>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            if (view === 'map') {
+                document.getElementById('map-view').style.display = 'block';
+                document.getElementById('list-view').style.display = 'none';
+                document.getElementById('map-view-btn').classList.add('active');
+                document.getElementById('list-view-btn').classList.remove('active');
+                
+                // Re-render map
+                if (mapManager && mapManager.map) {
+                    mapManager.map.invalidateSize();
+                    mapManager.addNGOMarkers(ngos);
+                }
+            } else {
+                document.getElementById('map-view').style.display = 'none';
+                document.getElementById('list-view').style.display = 'block';
+                document.getElementById('list-view-btn').classList.add('active');
+                document.getElementById('map-view-btn').classList.remove('active');
+                
+                renderNGOsList();
+            }
+        }
+
+        async function applyFilters() {
+            const radius = parseInt(document.getElementById('radius-slider').value);
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const verifiedOnly = document.getElementById('verified-only').checked;
+
+            if (!mapManager.userLocation) {
+                alert('Location not available');
+                return;
+            }
+
+            await loadNearbyNGOs(
+                mapManager.userLocation.lat,
+                mapManager.userLocation.lng,
+                radius
+            );
+
+            // Apply client-side filters
+            let filtered = [...ngos];
+
+            if (search) {
+                filtered = filtered.filter(ngo => 
+                    ngo.name.toLowerCase().includes(search) ||
+                    (ngo.bio && ngo.bio.toLowerCase().includes(search))
+                );
+            }
+
+            if (verifiedOnly) {
+                filtered = filtered.filter(ngo => ngo.verified);
+            }
+
+            ngos = filtered;
+
+            if (currentView === 'map') {
+                mapManager.addNGOMarkers(ngos);
+                mapManager.drawRadiusCircle(radius);
+            } else {
+                renderNGOsList();
+            }
+        }
+
+        function showOnMap(lat, lng) {
+            switchView('map');
+            setTimeout(() => {
+                mapManager.centerMap(lat, lng, 15);
+            }, 100);
+        }
+
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await auth.signOut();
+            }
+        }
+
+        // Initialize
+        initFindPage();
+    </script>
+</body>
+</html>

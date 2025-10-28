@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Nivaran</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" style="display: inline-block;">
+                    <img src="light_mode.png" alt="Nivaran Logo" style="cursor: pointer;">
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="dashboard.html" class="nav-link active">
+                    <span>📊</span> Dashboard
+                </a>
+                <a href="feed.html" class="nav-link">
+                    <span>📰</span> Feed
+                </a>
+                <a href="find.html" class="nav-link">
+                    <span>🗺️</span> Find NGOs
+                </a>
+                <a href="chat-list.html" class="nav-link">
+                    <span>💬</span> Messages
+                </a>
+                <a href="create-post.html" class="nav-link">
+                    <span>➕</span> Create Post
+                </a>
+                <a href="profile.html" class="nav-link">
+                    <span>👤</span> Profile
+                </a>
+                <a href="#" class="nav-link" onclick="logout()">
+                    <span>🚪</span> Logout
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="page-header">
+                <h1>Dashboard</h1>
+                <div class="user-info">
+                    <span id="user-name"></span>
+                    <img id="user-avatar" src="" alt="" class="avatar">
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📝</div>
+                        <div class="stat-info">
+                            <h3 id="posts-count">0</h3>
+                            <p>Posts</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">✅</div>
+                        <div class="stat-info">
+                            <h3 id="donations-count">0</h3>
+                            <p>Donations</p>
+                        </div>
+                    </div>
+                    <div class="stat-card" id="views-card" style="display: none;">
+                        <div class="stat-icon">👁️</div>
+                        <div class="stat-info">
+                            <h3 id="views-count">0</h3>
+                            <p>Profile Views</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💬</div>
+                        <div class="stat-info">
+                            <h3 id="chats-count">0</h3>
+                            <p>Conversations</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recently Viewed NGOs (Donors only) -->
+                <section id="recent-ngos" class="dashboard-section" style="display: none;">
+                    <h2>Recently Viewed NGOs</h2>
+                    <div id="recent-ngos-list" class="ngo-grid"></div>
+                </section>
+
+                <!-- My Posts -->
+                <section class="dashboard-section">
+                    <div class="section-header">
+                        <h2>My Posts</h2>
+                        <a href="create-post.html" class="btn btn-primary">➕ New Post</a>
+                    </div>
+                    <div id="my-posts" class="posts-grid"></div>
+                </section>
+
+                <!-- Donation History -->
+                <section class="dashboard-section">
+                    <h2>Donation History</h2>
+                    <div id="donation-history" class="history-list"></div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        const supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        window.supabase = supabase;
+    </script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="feed.js"></script>
+    <script>
+        let currentUser = null;
+
+        async function initDashboard() {
+            // Require authentication
+            const authenticated = await auth.requireAuth();
+            if (!authenticated) return;
+
+            currentUser = auth.getCurrentProfile();
+            
+            // Check if profile is complete
+            if (!auth.isProfileComplete()) {
+                console.log('Profile incomplete, redirecting...');
+                window.location.href = '/complete-profile.html';
+                return;
+            }
+            
+            // Update user info
+            document.getElementById('user-name').textContent = currentUser.name;
+            document.getElementById('user-avatar').src = currentUser.profile_image_url || 'default-avatar.png';
+
+            // Load dashboard data
+            await Promise.all([
+                loadStats(),
+                loadPosts(),
+                loadDonationHistory(),
+                currentUser.role === 'donor' ? loadRecentNGOs() : null
+            ]);
+        }
+
+        async function loadStats() {
+            try {
+                // Load posts count
+                const posts = await api.getPosts({ authorId: currentUser.id });
+                document.getElementById('posts-count').textContent = posts.length;
+
+                // Load donations count
+                const donations = await api.getDonationHistory(currentUser.id, currentUser.role);
+                document.getElementById('donations-count').textContent = donations.length;
+
+                // Load chats count
+                const chats = await api.getUserChats(currentUser.id);
+                document.getElementById('chats-count').textContent = chats.length;
+
+                // For NGOs, show profile views
+                if (currentUser.role === 'ngo') {
+                    document.getElementById('views-card').style.display = 'flex';
+                    const viewsCount = await api.getNGOViewStats(currentUser.id);
+                    document.getElementById('views-count').textContent = viewsCount;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        async function loadPosts() {
+            try {
+                await feedManager.loadPosts({ authorId: currentUser.id, limit: 10 });
+                feedManager.renderPosts('my-posts');
+            } catch (error) {
+                console.error('Error loading posts:', error);
+                document.getElementById('my-posts').innerHTML = '<p class="error">Failed to load posts</p>';
+            }
+        }
+
+        async function loadDonationHistory() {
+            try {
+                const donations = await api.getDonationHistory(currentUser.id, currentUser.role);
+                const container = document.getElementById('donation-history');
+                
+                if (donations.length === 0) {
+                    container.innerHTML = '<p class="empty-state">No donation history yet</p>';
+                    return;
+                }
+
+                container.innerHTML = donations.map(donation => {
+                    const otherUser = currentUser.role === 'donor' ? donation.ngo : donation.donor;
+                    const date = new Date(donation.created_at).toLocaleDateString();
+                    const statusClass = donation.status.replace('_', '-');
+                    
+                    return `
+                        <div class="history-item">
+                            <div class="history-info">
+                                <img src="${otherUser.profile_image_url || 'default-avatar.png'}" alt="${otherUser.name}" class="history-avatar">
+                                <div>
+                                    <h4>${donation.posts?.title || 'Donation'}</h4>
+                                    <p>${currentUser.role === 'donor' ? 'To' : 'From'}: ${otherUser.name}</p>
+                                    <small>${date}</small>
+                                </div>
+                            </div>
+                            <span class="status-badge ${statusClass}">${donation.status}</span>
+                        </div>
+                    `;
+                }).join('');
+            } catch (error) {
+                console.error('Error loading donation history:', error);
+            }
+        }
+
+        async function loadRecentNGOs() {
+            try {
+                document.getElementById('recent-ngos').style.display = 'block';
+                const ngos = await api.getRecentlyViewedNGOs(currentUser.id, 6);
+                const container = document.getElementById('recent-ngos-list');
+                
+                if (ngos.length === 0) {
+                    container.innerHTML = '<p class="empty-state">No recently viewed NGOs</p>';
+                    return;
+                }
+
+                container.innerHTML = ngos.map(ngo => `
+                    <div class="ngo-card" onclick="window.location.href='ngo_profile.html?id=${ngo.id}'">
+                        <img src="${ngo.profile_image_url || 'default-avatar.png'}" alt="${ngo.name}">
+                        <div class="ngo-info">
+                            <h3>${ngo.name}</h3>
+                            <p>${ngo.bio ? ngo.bio.substring(0, 100) + '...' : ''}</p>
+                            <small>Viewed: ${new Date(ngo.last_viewed).toLocaleDateString()}</small>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading recent NGOs:', error);
+            }
+        }
+
+        async function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                await auth.signOut();
+            }
+        }
+
+        // Initialize dashboard on page load
+        initDashboard();
+    </script>
+</body>
+</html>

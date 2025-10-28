@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Nivaran</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <a href="index.html" style="display: inline-block;">
+                    <img src="light_mode.png" alt="Nivaran Logo" style="cursor: pointer;">
+                </a>
+                <h2>Create Your Account</h2>
+                <p>Join us in fighting hunger and food waste</p>
+            </div>
+
+            <form id="signup-form" class="auth-form">
+                <div class="form-step active" id="step1">
+                    <h3>Choose Your Role</h3>
+                    <div class="role-selection">
+                        <label class="role-card">
+                            <input type="radio" name="role" value="donor" required>
+                            <div class="role-content">
+                                <div class="role-icon">🎁</div>
+                                <h4>Donor</h4>
+                                <p>I have surplus food to donate</p>
+                            </div>
+                        </label>
+                        <label class="role-card">
+                            <input type="radio" name="role" value="ngo" required>
+                            <div class="role-content">
+                                <div class="role-icon">🏢</div>
+                                <h4>NGO</h4>
+                                <p>I represent an organization that distributes food</p>
+                            </div>
+                        </label>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-block" onclick="nextStep()">Continue</button>
+                </div>
+
+                <!-- Simplified Signup Form - Step 2 -->
+                <div class="form-step" id="step2">
+                    <h3>Account Information</h3>
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" name="password" minlength="6" required>
+                        <small>Minimum 6 characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+                    
+                    <div class="form-buttons">
+                        <button type="button" class="btn btn-secondary" onclick="prevStep()">Back</button>
+                        <button type="submit" class="btn btn-primary">Create Account</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="auth-divider">
+                <span>OR</span>
+            </div>
+
+            <button class="btn btn-google" onclick="signInWithGoogle()">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Sign up with Google
+            </button>
+
+            <div class="auth-footer">
+                <p>Already have an account? <a href="login.html">Login</a></p>
+            </div>
+        </div>
+    </div>
+
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Creating your account...</p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <script>
+        const supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+        window.supabase = supabase;
+    </script>
+    <script src="auth.js"></script>
+    <script src="api.js"></script>
+    <script src="map.js"></script>
+    <script>
+        let currentStep = 1;
+        let selectedRole = null;
+
+        // Check URL for pre-selected role
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('role') === 'ngo') {
+            document.querySelector('input[value="ngo"]').checked = true;
+            selectedRole = 'ngo';
+        }
+
+        // Role selection handler
+        document.querySelectorAll('input[name="role"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                selectedRole = e.target.value;
+            });
+        });
+
+        function nextStep() {
+            const currentStepEl = document.getElementById(`step${currentStep}`);
+            
+            // Validate current step
+            const inputs = currentStepEl.querySelectorAll('input[required], textarea[required]');
+            let valid = true;
+            inputs.forEach(input => {
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    valid = false;
+                }
+            });
+
+            if (!valid) return;
+
+            // Check if role is selected
+            if (!selectedRole) {
+                showMessage('Please select your role (Donor or NGO)', 'error');
+                return;
+            }
+
+            currentStepEl.classList.remove('active');
+            currentStep++;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+        }
+
+        function prevStep() {
+            const activeStep = document.querySelector('.form-step.active');
+            activeStep.classList.remove('active');
+            currentStep--;
+            document.getElementById(`step${currentStep}`).classList.add('active');
+        }
+
+        async function signInWithGoogle() {
+            try {
+                await auth.signInWithGoogle();
+            } catch (error) {
+                showMessage('Google sign-in failed. Please try again.', 'error');
+            }
+        }
+
+        function showMessage(message, type = 'info') {
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'message-modal';
+            modal.innerHTML = `
+                <div class="message-modal-content ${type}">
+                    <div class="message-modal-header">
+                        <span class="message-icon">${type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ'}</span>
+                        <h3>${type === 'success' ? 'Success' : type === 'error' ? 'Error' : 'Information'}</h3>
+                    </div>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="this.closest('.message-modal').remove()">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        document.getElementById('signup-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.style.display = 'flex';
+
+            try {
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const phone = document.getElementById('phone').value;
+                
+                const userData = {
+                    name: email.split('@')[0], // Use email username as temporary name
+                    role: selectedRole,
+                    phone: phone,
+                    address: null,
+                    city: null,
+                    state: null,
+                    lat: null,
+                    lng: null,
+                    bio: null,
+                    profile_completed: false // Mark as incomplete to trigger profile completion
+                };
+
+                // Add empty NGO data if role is NGO
+                if (selectedRole === 'ngo') {
+                    userData.ngoData = {
+                        registration_number: null,
+                        website: null,
+                        representative_name: null
+                    };
+                }
+
+                const result = await auth.signUp(email, password, userData);
+                
+                loadingOverlay.style.display = 'none';
+                
+                // Show email confirmation message
+                showMessage(
+                    'Account created successfully! Please check your email to confirm your account before logging in.',
+                    'success'
+                );
+                
+                // Redirect to login after 3 seconds
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Signup error:', error);
+                loadingOverlay.style.display = 'none';
+                showMessage(error.message || 'Failed to create account. Please try again.', 'error');
+            }
+        });
+
+        // Check if already logged in
+        auth.getSession().then(session => {
+            if (session) {
+                auth.redirectToDashboard();
+            }
+        });
+    </script>
+</body>
+</html>
